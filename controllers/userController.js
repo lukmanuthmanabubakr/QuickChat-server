@@ -27,7 +27,7 @@ export const registerUser = async (req, res) => {
   }
 };
 
-//API to register user
+//API to login user
 export const loginUser = async (req, res) => {
   const { email, password } = req.body;
   try {
@@ -40,7 +40,20 @@ export const loginUser = async (req, res) => {
         return res.json({ success: true, token });
       }
     }
-    return res.json({success: false, message: "Invalid email or password"})
+    return res.json({ success: false, message: "Invalid email or password" });
+  } catch (error) {
+    return res.json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+//API to get user data
+export const getUser = async (req, res) => {
+  try {
+    const user = req.user
+    return res.json({success: true, user})
   } catch (error) {
     return res.json({
       success: false,
