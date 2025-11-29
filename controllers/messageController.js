@@ -54,9 +54,14 @@ export const imageMessageController = async (req, res) => {
     const { prompt, chatId, isPublished } = req.body;
 
     //Find Chat
-    const chat = await Chat.findOne({userId, _id: chatId})
+    const chat = await Chat.findOne({ userId, _id: chatId });
 
     //Push user message
-    
+    chat.messages.push({
+      role: "user",
+      content: prompt,
+      timestamp: Date.now(),
+      isImage: false,
+    });
   } catch (error) {}
 };
