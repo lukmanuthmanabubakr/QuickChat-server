@@ -40,12 +40,17 @@ export const textMessageController = async (req, res) => {
   }
 };
 
-
 //Controller based on image AI CHAT
 export const imageMessageController = async (req, res) => {
   try {
+    const userId = req.user._id;
+    //Check credits
+    if (req.user.credits < 2) {
+      return res.json({
+        success: false,
+        message: "You don't have enough credits to use this features",
+      });
+    }
     
-  } catch (error) {
-    
-  }
-}
+  } catch (error) {}
+};
