@@ -51,12 +51,6 @@ export const imageMessageController = async (req, res) => {
         message: "You don't have enough credits to use this features",
       });
     }
-    const { prompt, chatId, isPublished } = req.body;
-
-    //Find Chat
-    const chat = await Chat.findOne({userId, _id: chatId})
-
-    //Push user message
     
   } catch (error) {}
 };
