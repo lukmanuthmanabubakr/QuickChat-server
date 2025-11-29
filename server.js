@@ -4,6 +4,7 @@ import cors from 'cors'
 import connectDB from "./configs/db.js"
 import userRouter from "./routes/userRoutes.js"
 import chatRouter from "./routes/chatRoute.js"
+import messageRouter from "./routes/messageRoute.js"
 
 const app = express()
 
@@ -17,6 +18,7 @@ app.use(express.json())
 app.get('/', (req, res) => res.send('Ai server is running...'))
 app.use('/api/user', userRouter)
 app.use('/api/chat', chatRouter)
+app.use('/api/message', messageRouter)
 
 const PORT = process.env.PORT || 3590
 
