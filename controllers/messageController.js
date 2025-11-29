@@ -63,5 +63,7 @@ export const imageMessageController = async (req, res) => {
       timestamp: Date.now(),
       isImage: false,
     });
+
+    //Encode the prompt
   } catch (error) {}
 };
