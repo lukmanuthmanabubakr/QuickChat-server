@@ -73,6 +73,8 @@ export const imageMessageController = async (req, res) => {
       process.env.IMAGEKIT_URL_ENDPOINT
     }/ik-genimg-prompt-${encodedPrompt}/quictgpt/${Date.now()}.png?tr=w800,h-800`;
 
-    await axios.get(generatedImageUrl, { responseType: "arraybuffer" });
+    const aiImageResponse = await axios.get(generatedImageUrl, {
+      responseType: "arraybuffer",
+    });
   } catch (error) {}
 };
