@@ -1,7 +1,7 @@
 import Chat from "../models/Chat.js";
 import User from "../models/User.js";
 
-//Controller based on text based AI CHAT
+//Controller based on text AI CHAT
 export const textMessageController = async (req, res) => {
   try {
     const userId = req.user._id;
@@ -18,10 +18,9 @@ export const textMessageController = async (req, res) => {
     const { choices } = await openai.chat.completions.create({
       model: "gemini-2.0-flash",
       messages: [
-        { role: "system", content: "You are a helpful assistant." },
         {
           role: "user",
-          content: "Explain to me how AI works",
+          content: prompt,
         },
       ],
     });
@@ -40,3 +39,13 @@ export const textMessageController = async (req, res) => {
     res.json({ success: false, message: error.message });
   }
 };
+
+
+//Controller based on image AI CHAT
+export const imageMessageController = async (req, res) => {
+  try {
+    
+  } catch (error) {
+    
+  }
+}
