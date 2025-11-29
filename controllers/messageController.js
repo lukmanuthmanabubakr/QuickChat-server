@@ -1,3 +1,4 @@
+import axios from "axios";
 import Chat from "../models/Chat.js";
 import User from "../models/User.js";
 
@@ -65,5 +66,13 @@ export const imageMessageController = async (req, res) => {
     });
 
     //Encode the prompt
+    const encodedPrompt = encodeURIComponent(prompt);
+
+    //Construct ImageKit AI generation URL
+    const generatedImageUrl = `${
+      process.env.IMAGEKIT_URL_ENDPOINT
+    }/ik-genimg-prompt-${encodedPrompt}/quictgpt/${Date.now()}.png?tr=w800,h-800`;
+
+    await axios.get(generatedImageUrl, { responseType: "arraybuffer" });
   } catch (error) {}
 };
