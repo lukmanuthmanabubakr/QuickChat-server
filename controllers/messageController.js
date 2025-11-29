@@ -51,6 +51,5 @@ export const imageMessageController = async (req, res) => {
         message: "You don't have enough credits to use this features",
       });
     }
-    
   } catch (error) {}
 };
