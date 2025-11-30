@@ -1,6 +1,7 @@
 import User from "../models/User.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
+import Chat from "../models/Chat.js";
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "7d" });
@@ -52,12 +53,28 @@ export const loginUser = async (req, res) => {
 //API to get user data
 export const getUser = async (req, res) => {
   try {
-    const user = req.user
-    return res.json({success: true, user})
+    const user = req.user;
+    return res.json({ success: true, user });
   } catch (error) {
     return res.json({
       success: false,
       message: error.message,
     });
   }
+};
+
+//API to get published Images
+export const getPublishedImages = async (req, res) => {
+  try {
+    const publishedImageMessages = await Chat.aggregate([
+      {
+        $unwind: "$messages",
+      },
+      {
+        $match: {
+            "messages.isImage": true
+        }
+      }
+    ]);
+  } catch (error) {}
 };
