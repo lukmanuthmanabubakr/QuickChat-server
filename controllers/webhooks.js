@@ -1,4 +1,3 @@
-import { request } from "express";
 import Stripe from "stripe";
 import Transaction from "../models/transaction.js";
 import User from "../models/User.js";
@@ -21,34 +20,46 @@ export const stripeWebHooks = async (req, res) => {
 
   try {
     switch (event.type) {
-      case "payment_intent.succeeded":
-        {
-          const paymentIntent = event.data.object;
-          const sessionList = await stripe.checkout.sessions.list({
-            payment_intent: paymentIntent.id,
+      case "payment_intent.succeeded": {
+        const paymentIntent = event.data.object;
+        const sessionList = await stripe.checkout.sessions.list({
+          payment_intent: paymentIntent.id,
+        });
+
+        const session = sessionList.data[0];
+        const { transactionId, appId } = session.metadata;
+
+        if (appId === "quickgpt") {
+          const transaction = await Transaction.findOne({
+            _id: transactionId,
+            isPaid: false,
           });
 
-          const session = sessionList.data[0];
-          const { transactionId, appId } = session.metadata;
+          //Update credits in user account
+          await User.updateOne(
+            { _id: transaction.userId },
+            { $inc: { credits: transaction.credits } }
+          );
 
-          if (appId === "quickgpt") {
-            const transaction = await Transaction.findOne({
-              _id: transactionId,
-              isPaid: false,
-            });
-
-            //Update credits in user account
-            await User.updateOne(
-              { _id: transaction.userId },
-              { $inc: { credits: transaction.credits } }
-            );
-          }
+          //Update credit payment status
+          transaction.isPaid = true;
+          await transaction.save();
+        } else {
+          return response.json({
+            received: true,
+            message: "Invalid event: Invalid app",
+          });
         }
-
         break;
+      }
 
       default:
+        console.log("Unhandled event type:", event.type);
         break;
     }
-  } catch (error) {}
+
+    response.json({ received: true });
+  } catch (error) {
+    response.status(500).send;
+  }
 };
