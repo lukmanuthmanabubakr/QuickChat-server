@@ -57,27 +57,25 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 //API controller for purchasing a plan
 export const purchasePlan = async (req, res) => {
   try {
-
     const { planId } = req.body;
     const userId = req.user._id;
 
-    const plan = plans.find((p) => p._id === planId);
+    const plan = plans.find((plan) => plan._id === planId);
 
     if (!plan) {
       return res.json({ success: false, message: "Invalid plan" });
     }
 
-    // Create transaction
+    //Create new transaction
     const transaction = await Transaction.create({
-      userId,
+      userId: userId,
       planId: plan._id,
       amount: plan.price,
       credits: plan.credits,
       isPaid: false,
     });
 
-    // Extract origin or use fallback
-    const origin = req.headers.origin || "http://localhost:5173";
+    const { origin } = req.headers;
 
     const session = await stripe.checkout.sessions.create({
       line_items: [
@@ -99,14 +97,14 @@ export const purchasePlan = async (req, res) => {
         transactionId: transaction._id.toString(),
         appId: "quickgpt",
       },
+      //Will expire in 30mins
       expires_at: Math.floor(Date.now() / 1000 + 30 * 60),
     });
 
-
     res.json({ session: true, url: session.url });
-
   } catch (error) {
     res.json({ success: false, message: error.message });
   }
 };
+
 
