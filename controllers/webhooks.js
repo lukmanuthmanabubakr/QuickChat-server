@@ -2,7 +2,7 @@ import Stripe from "stripe";
 import Transaction from "../models/transaction.js";
 import User from "../models/User.js";
 
-export const stripeWebHooks = async (req, res) => {
+export const stripeWebHooks = async (request, response) => {
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
   const sig = request.headers["stripe-signature"];
 
