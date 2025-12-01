@@ -42,12 +42,11 @@ export const registerUser = async (req, res) => {
       });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-
+    // Don't manually hash - let the pre("save") hook handle it
     const newUser = await User.create({
       name,
       email,
-      password: hashedPassword,
+      password: password,  // Plain password - will be hashed by pre("save") hook
       isVerified: false,
     });
 
@@ -74,6 +73,67 @@ export const registerUser = async (req, res) => {
     });
   } catch (error) {
     console.error("Registration error:", error);
+    return res.status(500).json({ 
+      success: false,
+      message: error.message 
+    });
+  }
+};
+
+// API to resend verification email
+export const resendVerification = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ 
+        success: false,
+        message: "Email is required" 
+      });
+    }
+
+    const user = await User.findOne({ email });
+    
+    if (!user) {
+      return res.status(404).json({ 
+        success: false,
+        message: "No user found with this email address" 
+      });
+    }
+
+    if (user.isVerified) {
+      return res.status(400).json({ 
+        success: false,
+        message: "This account is already verified" 
+      });
+    }
+
+    // Delete old verification tokens for this user
+    await VerificationToken.deleteMany({ userId: user._id });
+
+    // Generate new verification token
+    const token = crypto.randomBytes(32).toString("hex");
+
+    await VerificationToken.create({
+      userId: user._id,
+      token,
+      expiresAt: new Date(Date.now() + 3600000), // 1 hour
+    });
+
+    // Send verification email
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: user.email,
+      subject: "Verify Your Email - QuickGPT",
+      html: verificationEmailTemplate(user.name, token),
+    });
+
+    return res.status(200).json({ 
+      success: true,
+      message: "Verification email has been resent. Please check your inbox." 
+    });
+  } catch (error) {
+    console.error("Resend verification error:", error);
     return res.status(500).json({ 
       success: false,
       message: error.message 
@@ -276,18 +336,40 @@ export const resetPassword = async (req, res) => {
 // API to login user
 export const loginUser = async (req, res) => {
   try {
+    console.log("=== LOGIN REQUEST RECEIVED ===");
     const { email, password } = req.body;
+    console.log("1. Email:", email);
+    console.log("2. Password provided:", !!password);
 
     if (!email || !password) {
+      console.log("3. Missing email or password");
       return res.status(400).json({ 
         success: false,
         message: "Email and password are required" 
       });
     }
 
+    console.log("4. Searching for user in database...");
     const user = await User.findOne({ email });
+    console.log("5. User found:", !!user);
 
     if (!user) {
+      console.log("6. User not found");
+      return res.status(401).json({ 
+        success: false,
+        message: "Invalid email or password" 
+      });
+    }
+
+    console.log("7. User found - ID:", user._id);
+    console.log("8. User verified status:", user.isVerified);
+    console.log("9. Checking password...");
+    
+    const isMatch = await bcrypt.compare(password, user.password);
+    console.log("10. Password match:", isMatch);
+
+    if (!isMatch) {
+      console.log("11. Password does not match");
       return res.status(401).json({ 
         success: false,
         message: "Invalid email or password" 
@@ -295,29 +377,27 @@ export const loginUser = async (req, res) => {
     }
 
     if (!user.isVerified) {
-      return res.status(401).json({ 
+      console.log("11. User is not verified");
+      return res.status(403).json({ 
         success: false,
-        message: "Please verify your email before logging in" 
+        message: "Please verify your email before logging in",
+        isVerified: false,
+        email: user.email
       });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
-
-    if (!isMatch) {
-      return res.status(401).json({ 
-        success: false,
-        message: "Invalid email or password" 
-      });
-    }
-
+    console.log("12. Generating token...");
     const token = generateToken(user._id);
+    console.log("13. Token generated successfully");
 
+    console.log("=== LOGIN SUCCESSFUL ===");
     return res.status(200).json({ 
       success: true,
       message: "Login successful",
       token 
     });
   } catch (error) {
+    console.log("=== LOGIN ERROR ===");
     console.error("Login error:", error);
     return res.status(500).json({
       success: false,
@@ -329,20 +409,30 @@ export const loginUser = async (req, res) => {
 // API to get user data
 export const getUser = async (req, res) => {
   try {
+    console.log("=== GET USER REQUEST ===");
+    console.log("1. req.user exists:", !!req.user);
+    
     const user = req.user;
     
     if (!user) {
+      console.log("2. User not found in request");
       return res.status(404).json({ 
         success: false,
         message: "User not found" 
       });
     }
 
+    console.log("2. User ID:", user._id);
+    console.log("3. User email:", user.email);
+    console.log("4. User verified:", user.isVerified);
+    console.log("=== GET USER SUCCESSFUL ===");
+
     return res.status(200).json({ 
       success: true, 
       user 
     });
   } catch (error) {
+    console.log("=== GET USER ERROR ===");
     console.error("Get user error:", error);
     return res.status(500).json({
       success: false,

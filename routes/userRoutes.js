@@ -5,6 +5,7 @@ import {
   getUser,
   loginUser,
   registerUser,
+  resendVerification,
   resetPassword,
   verifyUser,
 } from "../controllers/userController.js";
@@ -16,8 +17,9 @@ userRouter.post("/register", registerUser);
 userRouter.get("/verify/:token", verifyUser);
 userRouter.post("/login", loginUser);
 userRouter.post("/forgot-password", forgotPassword);
-userRouter.post("/reset-password/:token", resetPassword);
+userRouter.post("/resend-verification", resendVerification);
 userRouter.get("/data", protect, getUser);
+userRouter.post("/reset-password/:token", resetPassword);
 userRouter.get("/published-images",  getPublishedImages);
 
 export default userRouter;
